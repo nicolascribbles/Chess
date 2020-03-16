@@ -1,0 +1,46 @@
+
+*.dll
+
+.vs/Chess FSHARP/v16/.suo
+
+Chess FSHARP.sln
+
+Chess FSHARP/bin/Debug/netcoreapp3.1/Chess FSHARP.deps.json
+
+Chess FSHARP/bin/Debug/netcoreapp3.1/Chess FSHARP.exe
+
+Chess FSHARP/bin/Debug/netcoreapp3.1/Chess FSHARP.pdb
+
+Chess FSHARP/bin/Debug/netcoreapp3.1/Chess FSHARP.runtimeconfig.dev.json
+
+Chess FSHARP/bin/Debug/netcoreapp3.1/Chess FSHARP.runtimeconfig.json
+
+Chess FSHARP/Chess FSHARP.fsproj
+
+Chess FSHARP/obj/Chess FSHARP.fsproj.nuget.cache
+
+Chess FSHARP/obj/Chess FSHARP.fsproj.nuget.dgspec.json
+
+Chess FSHARP/obj/Chess FSHARP.fsproj.nuget.g.props
+
+Chess FSHARP/obj/Chess FSHARP.fsproj.nuget.g.targets
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.AssemblyInfo.fs
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.AssemblyInfoInputs.cache
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.assets.cache
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.exe
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.fsproj.CopyComplete
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.fsproj.CoreCompileInputs.cache
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.fsproj.FileListAbsolute.txt
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.pdb
+
+Chess FSHARP/obj/project.assets.json
+
+Chess FSHARP/obj/Debug/netcoreapp3.1/Chess FSHARP.fsprojAssemblyReference.cache
