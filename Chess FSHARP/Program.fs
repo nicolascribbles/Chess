@@ -2,6 +2,8 @@
 open System.Text
 open System.Text.RegularExpressions
 
+
+// Pieces & Players
 type Color = 
     | Black
     | White
@@ -22,38 +24,6 @@ type Piece = {
     Player : Color;
     Rank   : Rank;
     }
-
-type Column =
-    | A
-    | B
-    | C
-    | D
-    | E
-    | F
-    | G
-    | H
-    with static member List = [A; B; C; D; E; F; G; H]
-
-type Row =
-    | One
-    | Two
-    | Three
-    | Four
-    | Five
-    | Six
-    | Seven
-    | Eight
-    with static member List = [One; Two; Three; Four; Five; Six; Seven; Eight]
-
-
-type Square = (Row * Column)
-type Board = Map<Square, Piece option>
-
-let player = White
-
-let rowlist = Row.List
-
-let columnlist = Column.List
 
 let blackPawn = 
     Some { 
@@ -76,6 +46,43 @@ let white rank =
     Rank       = rank
     }
 
+// Board
+type Column =
+    | A
+    | B
+    | C
+    | D
+    | E
+    | F
+    | G
+    | H
+    with static member List = [A; B; C; D; E; F; G; H]
+
+type Row =
+    | One
+    | Two
+    | Three
+    | Four
+    | Five
+    | Six
+    | Seven
+    | Eight
+    with static member List = [One; Two; Three; Four; Five; Six; Seven; Eight]
+
+type Square = (Row * Column)
+
+type Board = Map<Square, Piece option>
+
+// Access Helpers
+let player = White
+let rowlist = Row.List
+let columnlist = Column.List
+
+// Move types
+type moveQuery = { From : Square ; To: Square}
+
+
+// Functions
 let matchRow ( row : string ) : Row =
     match row with
     | "1" | "One"   | "one"   -> One
@@ -104,6 +111,7 @@ let makeRow row pieces =
     let cells = Column.List |> List.map(fun col -> (row, col))
     List.zip cells pieces
 
+// Starting board
 let board =
     Map (   (makeRow Eight [black Rook; black Knight; black Bishop; black King; black Queen; black Bishop; black Knight; black Rook]) @
             (makeRow Seven [blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn]) @
@@ -114,6 +122,7 @@ let board =
             (makeRow Two [whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn]) @
             (makeRow One [white Rook; white Knight; white Bishop; white King; white Queen; white Bishop; white Knight; white Rook]) )
 
+// Printed Board
 let chessBoard () =
     printfn " "
     printfn " "
@@ -166,7 +175,8 @@ let chessBoard () =
     printfn " "
     printfn " "
     printfn " "   
-    
+
+// Query Function 
 let rec queryfunc key (map : Board) =
     if (board.ContainsKey key) then
         match board.[key] with
