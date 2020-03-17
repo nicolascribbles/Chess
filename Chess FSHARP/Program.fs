@@ -249,6 +249,20 @@ let rec rowCheck(rowInput : string) =
         let mutable rowInput = System.Console.ReadLine()
         rowCheck(rowInput : string)
 
+
+// : :
+// : :
+// : :
+// : :_______    :  :
+// :  _____  |   :  :
+// : :     : :       
+// : :     : :   :  :
+// : :     : :   :  :
+// : :     : :   :  :
+// : :     : :   :  :
+// : :     : :   :  :
+// : :     : :   :  :
+
 // WELCOME!
 printfn "\n\rWelcome to this lawless game of chess\n\r
 where you can move whatever the hell you want!"
