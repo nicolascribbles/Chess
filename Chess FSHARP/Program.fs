@@ -1,5 +1,3 @@
-﻿open System
-open System.Text
 open System.Text.RegularExpressions
 
 
@@ -49,7 +47,7 @@ type Row =
     | Eight
     with static member List = [One; Two; Three; Four; Five; Six; Seven; Eight]
 
-type Square = (Row * Column)
+type Square = (Column * Row)
 
 type Board = Map<Square, Piece option>
 
@@ -64,8 +62,9 @@ type State = {
     }
 
 // Access Helpers
-let rowlist = Row.List
+
 let columnlist = Column.List
+let rowlist = Row.List
 
 // Move types
 type moveQuery = { From : Square ; To: Square}
@@ -74,6 +73,19 @@ type movePieceQuery = { ThisPiece : Piece ; From : Square ; To: Square}
 
 let mutable inpRowValidation = false
 let mutable inpColumnValidation = false
+
+
+let matchColumn ( col : string ) : Column =
+    match col with
+    | "A" | "a" -> A
+    | "B" | "b" -> B
+    | "C" | "c" -> C
+    | "D" | "d" -> D
+    | "E" | "e" -> E
+    | "F" | "f" -> F
+    | "G" | "g" -> G
+    | "H" | "h" -> H
+    | _ -> A
 
 // Functions
 let matchRow ( row : string ) : Row =
@@ -88,20 +100,8 @@ let matchRow ( row : string ) : Row =
     | "8" | "Eight" | "eight" -> Eight
     | _ -> One
 
-let matchColumn ( col : string ) : Column =
-    match col with
-    | "A" | "a" -> A
-    | "B" | "b" -> B
-    | "C" | "c" -> C
-    | "D" | "d" -> D
-    | "E" | "e" -> E
-    | "F" | "f" -> F
-    | "G" | "g" -> G
-    | "H" | "h" -> H
-    | _ -> A
-
 let makeRow row pieces =
-    let cells = Column.List |> List.map(fun col -> (row, col))
+    let cells = Column.List |> List.map(fun col -> (col, row))
     List.zip cells pieces
 
 let blackPawn = 
@@ -145,7 +145,7 @@ let gameInit ()=
         Message = sprintf "%A to move" player ;
     }
 
-gameInit ()
+gameInit () |> ignore
 
 // Printed Board
 let chessBoard (board: Board) =
@@ -155,7 +155,7 @@ let chessBoard (board: Board) =
     printf "     "
     for column in columnlist do 
         printf " %A  " column
-    printfn "\n\r     _______________________________"
+    printfn "\n\r     ____________________________"
     for i in 8 .. -1 .. 1 do
         printf "\n\r %i | " i
     
@@ -163,7 +163,7 @@ let chessBoard (board: Board) =
         let matchedRow = matchRow row
     
         for column in columnlist do
-            let matchedKey : Square = (matchedRow, column)
+            let matchedKey : Square = (column, matchedRow)
             match board.[matchedKey] with
             | Some piece -> 
                 match piece.Rank with
@@ -195,20 +195,42 @@ let chessBoard (board: Board) =
                     match piece.Player with
                     | White -> printf " \u2659 "
                     | Black -> printf " \u265F "
-            | None -> printf "  "
+            | None -> printf "    "
 
     printfn " "
     printfn " "
     printfn " "   
 
 // Query Function 
-let rec queryfunc key (map : Board) =
+let rec queryfunc key (board : Board) =
     if (board.ContainsKey key) then
         match board.[key] with
         | Some piece -> 
             printfn "\n\r%A has a %A %A there!" key piece.Player piece.Rank
             chessBoard(board)
         | None -> printfn "%A is vacant.\n\r\n\r" key 
+
+
+// Validate the column
+let rec columnCheck (columnInput : string) =
+    // if the row doesn't have letters a-h it will print an error
+    inpColumnValidation <- Regex.IsMatch(columnInput, @"[A-H]", RegexOptions.IgnoreCase)
+
+    if inpColumnValidation = false then
+        printfn "\n\rWow, that's embarrassing. Try again, lightbulb.\n\r"
+
+        
+        // Ask again
+        printf "Please select the column ( A - H ) : "
+        let mutable columnInput = System.Console.ReadLine()
+        columnCheck(columnInput)
+
+    else if inpColumnValidation = true then
+
+        let column =
+            matchColumn(columnInput)
+        printfn "\n\r(%A, __)\n\r" column
+
 
 //Validate the row
 let rec rowCheck(rowInput : string) =
@@ -219,7 +241,7 @@ let rec rowCheck(rowInput : string) =
 
     if inpRowValidation = false then
 
-        printfn "\n\rI'm sorry, this input is invalid."
+        printfn "\n\rIt's wildly impressive how wrong you just were."
 
 
         // Ask again
@@ -227,139 +249,125 @@ let rec rowCheck(rowInput : string) =
         let mutable rowInput = System.Console.ReadLine()
         rowCheck(rowInput : string)
 
-    else if inpRowValidation = true then
-    
-        let row = 
-            matchRow (rowInput : string)
-
-        printfn "\n\r(%A, __)\n\r" row
-
-// Validate the column
-let rec columnCheck (columnInput : string) =
-    // if the row doesn't have letters a-h it will print an error
-    inpColumnValidation <- Regex.IsMatch(columnInput, @"[A-H]", RegexOptions.IgnoreCase)
-
-    if inpColumnValidation = false then
-        printfn "\n\rI'm sorry, this input is invalid.\n\r"
-
-        
-        // Ask again
-        printf "Please select the column ( A - H ) : "
-        let mutable columnInput = System.Console.ReadLine()
-        columnCheck(columnInput)
-
-
 // WELCOME!
-printfn "\n\rWelcome to this ordinary game of chess\n\r
-where you can only find out what lives in each square!"
+printfn "\n\rWelcome to this lawless game of chess\n\r
+where you can move whatever the hell you want!"
 
 chessBoard board
 
-// The access key format is Row * Column
-
-
-
-
-
-// Get the key function (returns columnInput & rowInput)
-
-        //key : Square <- 
-        //    (row, column)
+// The access key format is Column * Row
 
 
 let rec queryBoard() = 
+
+    // Get the column
+    printf "Please select the column ( A - H ) : "
+    let mutable columnInput : string = System.Console.ReadLine()     
+    
+    // Validate it
+    columnCheck(columnInput)
+    
+    
     // Get the row
     printf "Please select the row ( 1 - 8 ) : "
     let mutable rowInput : string = 
         System.Console.ReadLine()
+    
     // Validate it
     rowCheck(rowInput : string)
 
-    // Get the column
-    printf "Please select the column ( A - H ) : "
-    let mutable columnInput : string = System.Console.ReadLine()      
-    // Validate it
-    columnCheck(columnInput)
-    
+    // If it passes both tests, then tuple it into a key and return the query then query a move
     if inpColumnValidation = true && inpRowValidation = true then
-        let mutable row : Row =
-            matchRow rowInput
-        
+
         let mutable column : Column =
             matchColumn columnInput
-
-        let mutable key : Square = (row, column)
         
+        let mutable row : Row =
+            matchRow rowInput
+
+        let mutable key : Square = (column, row)
+
+        // Queryfunc returns piece information,
+        // my key is querying the board for piece or vacancy
         printfn " "
-        // Queryfunc returns piece information, tuple input is my key, and it's querying the board
         queryfunc key board
         printfn " "
 
         let square = board.[key]
-        if (board.ContainsKey key) then
-            match square with
-            | Some piece ->  
-                let myPiece : Piece option = Some {Player = piece.Player ; Rank = piece.Rank}
-                printf "Would you like to move it ? (y/n) "
-                let mutable input = System.Console.ReadLine()
-                match input with
-                | "y" -> 
-                    
-                    
 
-                    printfn "Where would you like to move your %A %A ?\n\r" piece.Player piece.Rank
-                    // Get the row
+        let rec moves (key) =
+            if (board.ContainsKey key) then
+                match square with
+                | Some piece ->  
+                    let mutable myPiece : Piece option = Some {Player = piece.Player ; Rank = piece.Rank}
+                    printf "\n\r\n\rWould you like to move it ? (y/n) "
+                    let mutable input = System.Console.ReadLine()
+                    match input with
+                    | "y" -> 
+                        printfn "\n\rWhere would you like to move your %A %A ?\n\r" piece.Player piece.Rank
                     
 
-                    // Get the row
-                    printf "Please select the row ( 1 - 8 ) : "
-                    let mutable toRowInput : string = 
-                        System.Console.ReadLine()
-                    // Validate it
-                    rowCheck(toRowInput : string)
                     
-                    // Get the column
-                    printf "Please select the column ( A - H ) : "
-                    let mutable toColumnInput : string = System.Console.ReadLine()      
-                    // Validate it
-                    columnCheck(toColumnInput)
+                        // Get the column
+                        printf "Please select the column ( A - H ) : "
+                        let mutable toColumnInput : string = System.Console.ReadLine()      
 
-                    let mutable toRow = matchRow toRowInput
-
-                    let mutable toColumn = matchColumn toColumnInput
-                     
-
-                    let mutable toKey : Square = (toRow, toColumn)
-
-                    match piece.Rank with
-                    | Pawn NotMoved -> { Player = piece.Player ; Rank = Pawn Moved }
-                    | _ -> { Player = piece.Player ; Rank = piece.Rank }
-                    |> ignore
-
-                    match board.[toKey] with
-                    | Some piece -> 
-                        printfn "\n\rYou have captured a %A %A!\n\r" piece.Player piece.Rank
+                        // Validate it
+                        columnCheck(toColumnInput)
                         
-                        board <- board.Add(toKey, None).Add(key, None).Add(toKey, myPiece)
+                        // Get the row
+                        printf "Please select the row ( 1 - 8 ) : "
+                        let mutable toRowInput : string = 
+                            System.Console.ReadLine()
 
-                    | None ->
-                        board <- board.Add(key, None).Add(toKey, myPiece)
+                        // Validate it
+                        rowCheck(toRowInput : string)
+                    
+                        if inpColumnValidation = true && inpRowValidation = true then
 
-                    chessBoard board
+                            let mutable toColumn = matchColumn toColumnInput
+                     
+                            let mutable toRow = matchRow toRowInput
+
+                            let mutable toKey : Square = (toColumn, toRow)
+
+                        
+                            if (myPiece = Some piece) then
+                                match piece with
+                                | { Player = _ ; Rank = Pawn NotMoved } -> 
+                                    myPiece <- Some { Player = piece.Player ; Rank = Pawn Moved }
+                                | { Player = _ ; Rank = _ } -> 
+                                    myPiece <- Some { Player = piece.Player ; Rank = piece.Rank }
+                            else
+                                printf "Uh oh"
+
+                            match board.[toKey] with
+                            | Some piece -> 
+                                printfn "%A %A got capped!\n\r" piece.Player piece.Rank
+                        
+                                board <- board.Add(toKey, None).Add(key, None).Add(toKey, myPiece)
+
+                            | None ->
+                                board <- board.Add(key, None).Add(toKey, myPiece)
+
+                            chessBoard board
+                    
+                        queryBoard()
+
+                    | "n" -> queryBoard()
+                    | _ -> 
+                        printfn "Fucking Ridiculous! Can't you read? Select y or n: \n\r"
+                        moves (key)
+                | None -> 
+                    printf "This is vacant."
                     queryBoard()
 
-                | "n" -> queryBoard()
-                | _ -> 
-                    printfn "Select y or n: \n\r" 
-                    queryBoard()
-            | None -> 
-                printf "There is no piece there"
-                queryBoard()
-
-   
+        moves (key)
     
     // If it passes all checks, continue with the query
 
 queryBoard() |> ignore
+
+
 
 System.Console.ReadKey() |> ignore
