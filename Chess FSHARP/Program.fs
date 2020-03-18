@@ -1,5 +1,5 @@
 open System.Text.RegularExpressions
-
+open System.Drawing
 
 // Pieces & Players
 type Color = 
@@ -125,39 +125,15 @@ let white rank =
     Rank       = rank
     }
     
-// Starting board
-let mutable board =
-    Map (   (makeRow Eight [black Rook; black Knight; black Bishop; black King; black Queen; black Bishop; black Knight; black Rook]) @
-            (makeRow Seven [blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn]) @
-            (makeRow Six [None;None;None;None;None;None;None;None]) @
-            (makeRow Five [None;None;None;None;None;None;None;None]) @
-            (makeRow Four [None;None;None;None;None;None;None;None]) @
-            (makeRow Three [None;None;None;None;None;None;None;None;]) @
-            (makeRow Two [whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn]) @
-            (makeRow One [white Rook; white Knight; white Bishop; white King; white Queen; white Bishop; white Knight; white Rook]) )
-    
-let gameInit ()=
-    let player = White
-    {
-        Board = board ;
-        Status = InProgress ;
-        ThisPlayer = player ;
-        Message = sprintf "%A to move" player ;
-    }
-
-gameInit () |> ignore
-
 // Printed Board
 let chessBoard (board: Board) =
-    printfn " "
-    printfn " "
     printfn " "
     printf "     "
     for column in columnlist do 
         printf " %A  " column
     printfn "\n\r     ____________________________"
     for i in 8 .. -1 .. 1 do
-        printf "\n\r %i | " i
+        printf "\n\r %i  | " i 
     
         let row = i.ToString()
         let matchedRow = matchRow row
@@ -196,9 +172,6 @@ let chessBoard (board: Board) =
                     | White -> printf " \u2659 "
                     | Black -> printf " \u265F "
             | None -> printf "    "
-
-    printfn " "
-    printfn " "
     printfn " "   
 
 // Query Function 
@@ -241,15 +214,31 @@ let rec rowCheck(rowInput : string) =
 
     if inpRowValidation = false then
 
-        printfn "\n\rIt's wildly impressive how wrong you just were."
-
+        printfn "\n\rIt's wildly impressive how wrong you just were. It's spelled out in front of you! Pick a number 1 through 8."
 
         // Ask again
         printf "\n\rPlease select the row ( 1 - 8 ) : "
         let mutable rowInput = System.Console.ReadLine()
         rowCheck(rowInput : string)
 
-
+// Starting board
+let mutable p = White
+let mutable b =
+    Map (   (makeRow Eight [black Rook; black Knight; black Bishop; black King; black Queen; black Bishop; black Knight; black Rook]) @
+            (makeRow Seven [blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn;blackPawn]) @
+            (makeRow Six [None;None;None;None;None;None;None;None]) @
+            (makeRow Five [None;None;None;None;None;None;None;None]) @
+            (makeRow Four [None;None;None;None;None;None;None;None]) @
+            (makeRow Three [None;None;None;None;None;None;None;None;]) @
+            (makeRow Two [whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn;whitePawn]) @
+            (makeRow One [white Rook; white Knight; white Bishop; white King; white Queen; white Bishop; white Knight; white Rook]) )
+let mutable s =
+    {
+        Board = b ;
+        Status = InProgress ;
+        ThisPlayer = p ;
+        Message = sprintf "%A to move" p ;
+    }
 // : :
 // : :
 // : :
@@ -264,124 +253,154 @@ let rec rowCheck(rowInput : string) =
 // : :     : :   :  :
 
 // WELCOME!
-printfn "\n\rWelcome to this lawless game of chess\n\r
-where you can move whatever the hell you want!"
+[<EntryPoint>]
+let Game args =
+    printfn "\n\rWelcome to this lawless game of chess\n\r
+    where you can move whatever the hell you want!"
+    let mutable board : Board = b
+    let mutable state : State = s
+    // Chessboard prints the board
+    chessBoard board
 
-chessBoard board
-
-// The access key format is Column * Row
-
-
-let rec queryBoard() = 
-
-    // Get the column
-    printf "Please select the column ( A - H ) : "
-    let mutable columnInput : string = System.Console.ReadLine()     
+    let mutable player : Color = p
     
-    // Validate it
-    columnCheck(columnInput)
-    
-    
-    // Get the row
-    printf "Please select the row ( 1 - 8 ) : "
-    let mutable rowInput : string = 
-        System.Console.ReadLine()
-    
-    // Validate it
-    rowCheck(rowInput : string)
+    printfn "%A goes first." player
 
-    // If it passes both tests, then tuple it into a key and return the query then query a move
-    if inpColumnValidation = true && inpRowValidation = true then
 
-        let mutable column : Column =
-            matchColumn columnInput
+    // The access key format is Column * Row
+    let rec queryBoard ( ) = 
+  
+
+        // Starting information
+        printfn "\n\rThis game is %A." state.Status
+        printfn "%s \n\r" state.Message
+
+        // Get the column
+        printf "Please select the column ( A - H ) : "
+        let mutable columnInput : string = System.Console.ReadLine()
+        // Validate it
+        columnCheck(columnInput)
+    
+    
+        // Get the row
+        printf "Please select the row ( 1 - 8 ) : "
+        let mutable rowInput : string = 
+            System.Console.ReadLine()
+        // Validate it
+        rowCheck(rowInput : string)
+
+        // If it passes both tests, then tuple it into a key and return the query then query a move
+        if inpColumnValidation = true && inpRowValidation = true then
+
+            let mutable column : Column =
+                matchColumn columnInput
         
-        let mutable row : Row =
-            matchRow rowInput
+            let mutable row : Row =
+                matchRow rowInput
 
-        let mutable key : Square = (column, row)
+            let mutable key : Square = (column, row)
 
-        // Queryfunc returns piece information,
-        // my key is querying the board for piece or vacancy
-        printfn " "
-        queryfunc key board
-        printfn " "
+            // Queryfunc returns piece information,
+            // my key is querying the board for piece or vacancy
+            printfn " "
+            queryfunc key board
+            printfn " "
 
-        let square = board.[key]
+            let square = board.[key]
 
-        let rec moves (key) =
-            if (board.ContainsKey key) then
-                match square with
-                | Some piece ->  
-                    let mutable myPiece : Piece option = Some {Player = piece.Player ; Rank = piece.Rank}
-                    printf "\n\r\n\rWould you like to move it ? (y/n) "
-                    let mutable input = System.Console.ReadLine()
-                    match input with
-                    | "y" -> 
-                        printfn "\n\rWhere would you like to move your %A %A ?\n\r" piece.Player piece.Rank
-                    
+            let mutable player = state.ThisPlayer
 
-                    
-                        // Get the column
-                        printf "Please select the column ( A - H ) : "
-                        let mutable toColumnInput : string = System.Console.ReadLine()      
-
-                        // Validate it
-                        columnCheck(toColumnInput)
+            let rec moves ( ) =
+                if (board.ContainsKey key) then
+                    match square with
+                    | Some piece -> 
+                        let pieceColor = piece.Player
                         
-                        // Get the row
-                        printf "Please select the row ( 1 - 8 ) : "
-                        let mutable toRowInput : string = 
-                            System.Console.ReadLine()
-
-                        // Validate it
-                        rowCheck(toRowInput : string)
+                        if ( player = pieceColor ) then
+                            let mutable myPiece : Piece option = Some {Player = piece.Player ; Rank = piece.Rank}
+                            printf "\n\r\n\r Would you like to move your %A %A ? (y/n) " piece.Player piece.Rank
+                            let mutable input = System.Console.ReadLine()
+                            match input with
+                            | "y" | "Y" -> 
+                                printfn "\n\rWhere would you like to move your %A %A ?\n\r" piece.Player piece.Rank
                     
-                        if inpColumnValidation = true && inpRowValidation = true then
+                                // Get the column
+                                printf "Please select the column ( A - H ) : "
+                                let mutable toColumnInput : string = System.Console.ReadLine()      
 
-                            let mutable toColumn = matchColumn toColumnInput
+                                // Validate it
+                                columnCheck(toColumnInput)
+                        
+                                // Get the row
+                                printf "Please select the row ( 1 - 8 ) : "
+                                let mutable toRowInput : string = 
+                                    System.Console.ReadLine()
+
+                                // Validate it
+                                rowCheck(toRowInput : string)
+                    
+                                if inpColumnValidation = true && inpRowValidation = true then
+
+                                    let mutable toColumn = matchColumn toColumnInput
                      
-                            let mutable toRow = matchRow toRowInput
+                                    let mutable toRow = matchRow toRowInput
 
-                            let mutable toKey : Square = (toColumn, toRow)
+                                    let mutable toKey : Square = (toColumn, toRow)
 
                         
-                            if (myPiece = Some piece) then
-                                match piece with
-                                | { Player = _ ; Rank = Pawn NotMoved } -> 
-                                    myPiece <- Some { Player = piece.Player ; Rank = Pawn Moved }
-                                | { Player = _ ; Rank = _ } -> 
-                                    myPiece <- Some { Player = piece.Player ; Rank = piece.Rank }
-                            else
-                                printf "Uh oh"
+                                    if (myPiece = Some piece) then
+                                        match piece with
+                                        | { Player = _ ; Rank = Pawn NotMoved } -> 
+                                            myPiece <- Some { Player = piece.Player ; Rank = Pawn Moved }
+                                        | { Player = _ ; Rank = _ } -> 
+                                            myPiece <- Some { Player = piece.Player ; Rank = piece.Rank }
+                                    else
+                                        printf "Uh oh"
 
-                            match board.[toKey] with
-                            | Some piece -> 
-                                printfn "%A %A got capped!\n\r" piece.Player piece.Rank
-                        
-                                board <- board.Add(toKey, None).Add(key, None).Add(toKey, myPiece)
+                                    match board.[toKey] with
+                                    | Some piece -> 
+                                        printfn "%A %A got capped!\n\r" piece.Player piece.Rank
+                                        let mutable player =
+                                            match piece.Player with
+                                            | Black -> White
+                                            | White -> Black
 
-                            | None ->
-                                board <- board.Add(key, None).Add(toKey, myPiece)
+                                        board <- board.Add(toKey, None).Add(key, None).Add(toKey, myPiece)
+                                    
+                                    
+                                        state <- { Board = board ; Status = InProgress; ThisPlayer = player;Message = state.Message; }
+                                    | None ->
+                                        let mutable player =
+                                            match piece.Player with
+                                            | Black -> White
+                                            | White -> Black
 
-                            chessBoard board
+                                        board <- board.Add(key, None).Add(toKey, myPiece)
+
+                                        state <- { Board = board ; Status = InProgress; ThisPlayer = player;Message = sprintf "%A to move." player; }
+
+                                    chessBoard board
+
                     
-                        queryBoard()
+                                queryBoard( )
 
-                    | "n" -> queryBoard()
-                    | _ -> 
-                        printfn "Fucking Ridiculous! Can't you read? Select y or n: \n\r"
-                        moves (key)
-                | None -> 
-                    printf "This is vacant."
-                    queryBoard()
+                            | "N" | "n" -> queryBoard( )
+                            | _ -> 
+                                printfn "Fucking Ridiculous! Can't you read? Select y or n: \n\r"
+                                moves ( )
+                        else 
+                            printfn "That's not your piece!"
+                            queryBoard ( )
+                    | None -> 
+                        printf "This is vacant."
+                        queryBoard( )
 
-        moves (key)
+            moves ()
     
-    // If it passes all checks, continue with the query
+   // If it passes all checks, continue with the query
+   
+    System.Console.ReadKey() |> ignore
+        
 
-queryBoard() |> ignore
-
-
-
-System.Console.ReadKey() |> ignore
+    queryBoard ( ) 
+    0
