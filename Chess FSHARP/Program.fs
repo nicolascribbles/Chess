@@ -338,6 +338,7 @@ let Game args =
 
                                 // Validate it
                                 rowCheck(toRowInput : string)
+
                     
                                 if inpColumnValidation = true && inpRowValidation = true then
 
@@ -348,6 +349,69 @@ let Game args =
                                     let mutable toKey : Square = (toColumn, toRow)
 
                         
+                                    // Validate the move
+                                    let moveValidation (key:Square) (toKey:Square) : bool = false
+                                    (*
+
+                                    I need the distance first so I can count the number of squares it jumps from one to the other
+                                    I need to say that columns are vertical (up and down)
+                                    I need to say that rows are horizontal (left and right
+                                    I need a record for this too
+
+
+                                    I need validation for the direction they are going
+                                    to (so I want my Y coordinate to move in -1 direction
+                                    for my black player and +1 for my white player)
+
+                                    I will also need the square they are going to (so the toKey)
+                                    
+
+                                    Okay so, here are the rules:
+
+                                        Pawn    :
+                                            - Can only move forward unless it's capturing (landing in square diagonally from other player)
+                                            - On first turn, can move 2 spaces
+                                            - On every turn after, they can only move forward 1 space (remember to capture diagonally)
+                                            - You can also capture by landing on their square
+
+                                        ###
+
+                                        Knight  :
+                                            - Moves in an L shape: 
+                                                - 2 up & 1 left or right
+                                                - 1 up & 2 left or right
+                                            - Won't collide with other pieces (can jump over them)
+                                            - Can only capture by landing on the square the enemy is in
+
+                                        ###
+
+                                        Bishop  :
+                                            - May move diagonally as far as their line of sight
+                                            - End at capturing the piece ( if enemy )
+
+                                        ###
+
+                                        Rook    :
+                                            - May only move straight and as far as line of sight
+                                            - Can go forward / backward / left / right
+
+                                        ###
+
+                                        Queen   :
+                                            - Can move and capture on any square in line of sight
+                                            - Can move straight & diagonal
+
+                                        ###
+
+                                        King    :
+                                            - Restricted to one move per turn
+                                            - Can move in any direction
+                                                - Straight / Diagonal
+                                            - May capture in any direction that's within legal move range
+
+                                    *)
+
+
                                     if (myPiece = Some piece) then
                                         match piece with
                                         | { Player = _ ; Rank = Pawn NotMoved } -> 
