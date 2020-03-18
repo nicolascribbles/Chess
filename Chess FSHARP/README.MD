@@ -7,10 +7,12 @@ Part of the difficulty is that I have (embarrissingly) never played Chess. So I 
 ## Current State of the Game
 ### Status : In Progress
 
-Currently, you can query a position and return a string to the console of the player and the rank of the piece.
+- You can query a piece
+- You can view the current board per update
+- You now know whos turn it is
+- You can move a piece from one square to another
+    - If the piece lands on another piece, it captures that piece
 
 ### Upcoming Changes
-- Move functionality
-- Game Progress Status
-- Player query
 - Move rules per rank
+- Game in check
