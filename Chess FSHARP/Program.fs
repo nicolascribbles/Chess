@@ -70,6 +70,7 @@ let rowlist = Row.List
 type moveQuery = { From : Square ; To: Square}
 type movePieceQuery = { ThisPiece : Piece ; From : Square ; To: Square}
 
+type distance = { Horizontal: int; Vertical: int}
 
 let mutable inpRowValidation = false
 let mutable inpColumnValidation = false
@@ -348,69 +349,145 @@ let Game args =
 
                                     let mutable toKey : Square = (toColumn, toRow)
 
-                        
-                                    // Validate the move
-                                    let moveValidation (key:Square) (toKey:Square) : bool = false
+
+
+                                    // Validate the move - Maybe set up for boolean
+                                    let moveValidation (key) (toKey) = 
                                     (*
-
-                                    I need the distance first so I can count the number of squares it jumps from one to the other
-                                    I need to say that columns are vertical (up and down)
-                                    I need to say that rows are horizontal (left and right
-                                    I need a record for this too
-
-
-                                    I need validation for the direction they are going
-                                    to (so I want my Y coordinate to move in -1 direction
-                                    for my black player and +1 for my white player)
-
-                                    I will also need the square they are going to (so the toKey)
-                                    
-
-                                    Okay so, here are the rules:
-
-                                        Pawn    :
-                                            - Can only move forward unless it's capturing (landing in square diagonally from other player)
-                                            - On first turn, can move 2 spaces
-                                            - On every turn after, they can only move forward 1 space (remember to capture diagonally)
-                                            - You can also capture by landing on their square
-
-                                        ###
-
-                                        Knight  :
-                                            - Moves in an L shape: 
-                                                - 2 up & 1 left or right
-                                                - 1 up & 2 left or right
-                                            - Won't collide with other pieces (can jump over them)
-                                            - Can only capture by landing on the square the enemy is in
-
-                                        ###
-
-                                        Bishop  :
-                                            - May move diagonally as far as their line of sight
-                                            - End at capturing the piece ( if enemy )
-
-                                        ###
-
-                                        Rook    :
-                                            - May only move straight and as far as line of sight
-                                            - Can go forward / backward / left / right
-
-                                        ###
-
-                                        Queen   :
-                                            - Can move and capture on any square in line of sight
-                                            - Can move straight & diagonal
-
-                                        ###
-
-                                        King    :
-                                            - Restricted to one move per turn
-                                            - Can move in any direction
-                                                - Straight / Diagonal
-                                            - May capture in any direction that's within legal move range
-
+                                        I need the distance first so I can count the number of squares it jumps from one to the other
+                                        I need to say that columns are vertical (up and down)
+                                        I need to say that rows are horizontal (left and right)
+                                        I need a record for this too so i gotta make it a type
                                     *)
 
+                                        let mutable toKey : Square = (toColumn, toRow)
+
+                                        let distance ( move : movePieceQuery ) =
+                                            let (fx, fy) = move.From
+                                            let (tx, ty) = move.To
+
+                                            let xA = 
+                                                ((Column.List |> List.findIndex (fun c -> c = tx)) - 
+                                                    (Column.List |> List.findIndex(fun c -> c = fx)))
+
+                                            let yA = 
+                                                ((Row.List |> List.findIndex (fun  c -> c = ty)) - 
+                                                    (Row.List |> List.findIndex (fun c -> c = fy)))
+
+                                            { Horizontal = xA ; Vertical = yA ; }
+
+                                        let validatePieceandRank (board : Board) player (move: movePieceQuery) =
+
+                                            let mutable d = distance move
+                                            let dCoords = ((abs d.Horizontal), (abs d.Vertical))
+                                            
+                                            // Pawn move rules
+                                            let pawnMove pawnState move =
+                                            (* 
+                                                Pawn    :
+                                                    - Can only move forward unless it's capturing (landing in square diagonally from other player)
+                                                    - On first turn, can move 2 spaces
+                                                    - On every turn after, they can only move forward 1 space (remember to capture diagonally)
+                                                    - You can also capture by landing on their square
+                                            *)
+                                                let mutable d = distance move
+                                                let direction =
+                                                   // Can only move forward
+                                                    match player with
+                                                    | White -> 1
+                                                    | Black -> -1
+                                                // I need this to determine if it can catch players
+                                                let newSquare = board.[move.To]
+
+                                                match (dCoords, newSquare, pawnState) with
+                                                // On first turn, can move 2 spaces
+                                                | ((x, y), None, NotMoved) when x = 0 && y = (2 * direction) -> Ok move 
+                                                // On first turn and any turn, can move 1 space
+                                                | ((x, y), None, _) when x = 0 && y = (1 * direction) -> Ok move
+                                                | ((x, y), Some _, _) when x = 1 && y = (1 * direction) -> Ok move
+                                                | _ -> Error "Error: This is not a valid move"
+                                            
+                                                if (this.Result = Error) then
+                                                    printfn "%s" Error
+                                                    moves ( )
+
+                                            let straight move =
+                                             // Rook: May only move straight - forward backward left and right
+
+                                                match dCoords with
+                                                | (x, y) when x > 0 && y = 0 -> Ok move
+                                                | (x, y) when x = 0 && y > 0 -> Ok move
+                                                | _ -> Error "Error: This is not a valid move" 
+                                                
+                                                if (this.Result = Error) then
+                                                    printfn "%s" Error
+                                                    moves ( )
+
+                                            let diagonal move =
+                                            // Bishop: may move diagonally
+                                                match dCoords with
+                                                | (x, y) when x > 0 && y = x -> Ok move
+                                                | _ -> Error "Error: This is not a valid move" 
+
+                                                if (this.Result = Error) then
+                                                    printfn "%s" Error
+                                                    moves ( )
+
+
+
+                                            let lshape move =
+                                            // Knight: move in L shape & won't collide
+
+                                                match dCoords with
+                                                | (2, 1) | (1, 2) -> Ok move
+                                                | _ -> Error "Error: This is not a valid move" 
+
+                                                if (this.Result = Error) then
+                                                    printfn "%s" Error
+                                                    moves ( )
+
+
+                                            let queenMove move =
+                                            // Queen: can move straight or diagonal
+                                                match dCoords with
+                                                | (x, y) when x > 0 && y = 0 -> Ok move
+                                                | (x, y) when x = 0 && y > 0 -> Ok move
+                                                | (x, y) when x > 0 && y = x -> Ok move
+                                                | _ -> Error "Error: This is not a valid move" 
+
+                                                if (this.Result = Error) then
+                                                    printfn "%s" Error
+                                                    moves ( )
+
+
+                                            let kingMove move =
+                                            (*
+                                                King    :
+                                                    - Restricted to one move per turn
+                                                    - Can move in any direction
+                                                        - Straight / Diagonal
+                                                    - May capture in any direction that's within legal move range
+                                            *)
+                                                match dCoords with
+                                                | (x, y) when x = 1 && y = 0 -> Ok move
+                                                | (x, y) when x = 0 && y = 1 -> Ok move
+                                                | (x, y) when x = 1 && y = 1 -> Ok move
+                                                | _ -> Error "Error: This is not a valid move" 
+
+                                                if (this.Result = Error) then
+                                                    printfn "%s" Error
+                                                    moves ( )
+
+                                            // sending to correct function of movement
+                                            match move.ThisPiece.Rank with
+                                            | King          -> kingMove
+                                            | Queen         -> queenMove
+                                            | Bishop        -> diagonal
+                                            | Knight        -> lshape
+                                            | Rook          -> straight
+                                            | Pawn NotMoved -> pawnMove NotMoved
+                                            | Pawn Moved    -> pawnMove Moved
+                                        validatePieceandRank board player
 
                                     if (myPiece = Some piece) then
                                         match piece with
@@ -419,7 +496,7 @@ let Game args =
                                         | { Player = _ ; Rank = _ } -> 
                                             myPiece <- Some { Player = piece.Player ; Rank = piece.Rank }
                                     else
-                                        printf "Uh oh"
+                                        printf "I am not even sure how you got here."
 
                                     match board.[toKey] with
                                     | Some piece -> 
@@ -447,6 +524,7 @@ let Game args =
 
                     
                                 queryBoard( )
+
 
                             | "N" | "n" -> queryBoard( )
                             | _ -> 
