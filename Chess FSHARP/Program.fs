@@ -1,6 +1,9 @@
 open System.Text.RegularExpressions
 open System.Drawing
 
+
+exception InvalidMove of string
+
 // Pieces & Players
 type Color = 
     | Black
@@ -350,19 +353,24 @@ let Game args =
                                     let mutable toKey : Square = (toColumn, toRow)
 
 
+                                    
 
-                                    // Validate the move - Maybe set up for boolean
-                                    let moveValidation (key) (toKey) = 
-                                    (*
-                                        I need the distance first so I can count the number of squares it jumps from one to the other
-                                        I need to say that columns are vertical (up and down)
-                                        I need to say that rows are horizontal (left and right)
-                                        I need a record for this too so i gotta make it a type
-                                    *)
 
-                                        let mutable toKey : Square = (toColumn, toRow)
+                                (*
+                                    I need the distance first so I can count the number of squares it jumps from one to the other
+                                    I need to say that columns are vertical (up and down)
+                                    I need to say that rows are horizontal (left and right)
+                                    I need a record for this too so i gotta make it a type
+                                *)
+                                    let mutable moveQuery : movePieceQuery = { 
+                                                                        ThisPiece = piece;
+                                                                        From = key;
+                                                                        To  = toKey;
+                                                                        }
 
-                                        let distance ( move : movePieceQuery ) =
+                                    let validatePieceandRank ( board : Board ) player ( move : movePieceQuery ) =
+                                        
+                                        let distance ( move ) =
                                             let (fx, fy) = move.From
                                             let (tx, ty) = move.To
 
@@ -375,119 +383,146 @@ let Game args =
                                                     (Row.List |> List.findIndex (fun c -> c = fy)))
 
                                             { Horizontal = xA ; Vertical = yA ; }
+                                        let mutable resultFailure : bool = false
 
-                                        let validatePieceandRank (board : Board) player (move: movePieceQuery) =
-
-                                            let mutable d = distance move
-                                            let dCoords = ((abs d.Horizontal), (abs d.Vertical))
+                                        let mutable d = distance move
+                                        let dCoords = ((abs d.Horizontal), (abs d.Vertical))
                                             
-                                            // Pawn move rules
-                                            let pawnMove pawnState move =
-                                            (* 
-                                                Pawn    :
-                                                    - Can only move forward unless it's capturing (landing in square diagonally from other player)
-                                                    - On first turn, can move 2 spaces
-                                                    - On every turn after, they can only move forward 1 space (remember to capture diagonally)
-                                                    - You can also capture by landing on their square
-                                            *)
-                                                let mutable d = distance move
-                                                let direction =
-                                                   // Can only move forward
-                                                    match player with
-                                                    | White -> 1
-                                                    | Black -> -1
-                                                // I need this to determine if it can catch players
-                                                let newSquare = board.[move.To]
+                                        // Pawn move rules
+                                        let pawnMove pawnState move =
+                                        (* 
+                                            Pawn    :
+                                                - Can only move forward unless it's capturing (landing in square diagonally from other player)
+                                                - On first turn, can move 2 spaces
+                                                - On every turn after, they can only move forward 1 space (remember to capture diagonally)
+                                                - You can also capture by landing on their square
+                                        *)
+                                            let mutable d = distance move
+                                            let direction =
+                                                // Can only move forward
+                                                match player with
+                                                | White -> 1
+                                                | Black -> -1
+                                            // I need this to determine if it can catch players
+                                            let newSquare = board.[move.To]
 
+
+                                            let moveValidation () : Result<movePieceQuery, string> = 
                                                 match (dCoords, newSquare, pawnState) with
                                                 // On first turn, can move 2 spaces
-                                                | ((x, y), None, NotMoved) when x = 0 && y = (2 * direction) -> Ok move 
+                                                | ((x, y), None, NotMoved) when x = 0 && y = (2 * direction) -> Ok move
                                                 // On first turn and any turn, can move 1 space
                                                 | ((x, y), None, _) when x = 0 && y = (1 * direction) -> Ok move
                                                 | ((x, y), Some _, _) when x = 1 && y = (1 * direction) -> Ok move
-                                                | _ -> Error "Error: This is not a valid move"
+                                                | _ -> 
+                                                    resultFailure <- true   
+                                                    raise (InvalidMove("This is not a valid move. Try Again."))
+                                                        
+                                            if resultFailure = true then
+                                                moves ()
                                             
-                                                if (this.Result = Error) then
-                                                    printfn "%s" Error
-                                                    moves ( )
+                                            moveValidation ()
 
-                                            let straight move =
-                                             // Rook: May only move straight - forward backward left and right
+                                        let straight move =
+                                            // Rook: May only move straight - forward backward left and right
 
+                                            let moveValidation () : Result<movePieceQuery, string> =
                                                 match dCoords with
                                                 | (x, y) when x > 0 && y = 0 -> Ok move
                                                 | (x, y) when x = 0 && y > 0 -> Ok move
-                                                | _ -> Error "Error: This is not a valid move" 
+                                                | _ -> 
+                                                    resultFailure <- true   
+                                                    raise (InvalidMove("This is not a valid move. Try Again."))       
+                                            if resultFailure = true then
+                                                moves ()
                                                 
-                                                if (this.Result = Error) then
-                                                    printfn "%s" Error
-                                                    moves ( )
+                                            moveValidation ()
 
-                                            let diagonal move =
-                                            // Bishop: may move diagonally
+                                        let diagonal move =
+                                        // Bishop: may move diagonally
+                                            
+                                            let moveValidation () : Result<movePieceQuery, string> =
                                                 match dCoords with
                                                 | (x, y) when x > 0 && y = x -> Ok move
-                                                | _ -> Error "Error: This is not a valid move" 
+                                                | _ -> 
+                                                    resultFailure <- true   
+                                                    raise (InvalidMove("This is not a valid move. Try Again."))
+                                                    
+                                            if resultFailure = true then
+                                                moves ()
 
-                                                if (this.Result = Error) then
-                                                    printfn "%s" Error
-                                                    moves ( )
+                                            
+                                            moveValidation ()
 
-
-
-                                            let lshape move =
-                                            // Knight: move in L shape & won't collide
-
+                                        let lshape move =
+                                        // Knight: move in L shape & won't collide
+                                            
+                                            let moveValidation () : Result<movePieceQuery, string> =
                                                 match dCoords with
                                                 | (2, 1) | (1, 2) -> Ok move
-                                                | _ -> Error "Error: This is not a valid move" 
+                                                | _ -> 
+                                                    resultFailure <- true   
+                                                    raise (InvalidMove("This is not a valid move. Try Again."))
+                                                    
+                                            if resultFailure = true then
+                                                moves ()
 
-                                                if (this.Result = Error) then
-                                                    printfn "%s" Error
-                                                    moves ( )
+                                            
+                                            moveValidation ()
 
-
-                                            let queenMove move =
-                                            // Queen: can move straight or diagonal
+                                        let queenMove move =
+                                        // Queen: can move straight or diagonal
+                                                
+                                            let moveValidation () : Result<movePieceQuery, string> =
                                                 match dCoords with
                                                 | (x, y) when x > 0 && y = 0 -> Ok move
                                                 | (x, y) when x = 0 && y > 0 -> Ok move
                                                 | (x, y) when x > 0 && y = x -> Ok move
-                                                | _ -> Error "Error: This is not a valid move" 
+                                                | _ -> 
+                                                    resultFailure <- true   
+                                                    raise (InvalidMove("This is not a valid move. Try Again."))
+                                                    
+                                            if resultFailure = true then
+                                                moves ()
+                                            
+                                            moveValidation ()
 
-                                                if (this.Result = Error) then
-                                                    printfn "%s" Error
-                                                    moves ( )
-
-
-                                            let kingMove move =
-                                            (*
-                                                King    :
-                                                    - Restricted to one move per turn
-                                                    - Can move in any direction
-                                                        - Straight / Diagonal
-                                                    - May capture in any direction that's within legal move range
-                                            *)
+                                        let kingMove move =
+                                        (*
+                                            King    :
+                                                - Restricted to one move per turn
+                                                - Can move in any direction
+                                                    - Straight / Diagonal
+                                                - May capture in any direction that's within legal move range
+                                        *)
+                                            let moveValidation () : Result<movePieceQuery, string> =
                                                 match dCoords with
                                                 | (x, y) when x = 1 && y = 0 -> Ok move
                                                 | (x, y) when x = 0 && y = 1 -> Ok move
                                                 | (x, y) when x = 1 && y = 1 -> Ok move
-                                                | _ -> Error "Error: This is not a valid move" 
+                                                | _ -> 
+                                                    resultFailure <- true   
+                                                    raise (InvalidMove("This is not a valid move. Try Again."))
+                                                    
+                                            if resultFailure = true then
+                                                moves ()
+                                            
+                                            moveValidation ()
 
-                                                if (this.Result = Error) then
-                                                    printfn "%s" Error
-                                                    moves ( )
 
-                                            // sending to correct function of movement
-                                            match move.ThisPiece.Rank with
-                                            | King          -> kingMove
-                                            | Queen         -> queenMove
-                                            | Bishop        -> diagonal
-                                            | Knight        -> lshape
-                                            | Rook          -> straight
-                                            | Pawn NotMoved -> pawnMove NotMoved
-                                            | Pawn Moved    -> pawnMove Moved
-                                        validatePieceandRank board player
+                                        // sending to correct function of movement
+                                        match move.ThisPiece.Rank with
+                                        | King          -> kingMove
+                                        | Queen         -> queenMove
+                                        | Bishop        -> diagonal
+                                        | Knight        -> lshape
+                                        | Rook          -> straight
+                                        | Pawn NotMoved -> pawnMove NotMoved
+                                        | Pawn Moved    -> pawnMove Moved
+
+                                    validatePieceandRank board player moveQuery
+                                    
+                                    
 
                                     if (myPiece = Some piece) then
                                         match piece with
